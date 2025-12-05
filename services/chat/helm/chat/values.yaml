@@ -1,0 +1,19 @@
+image:
+  repository: chat-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+
+env:
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_USER: chat
+  DB_PASSWORD: chat
+  DB_NAME: chat
+  KAFKA_BROKERS: kafka:9092
+  PORT: "3000"
+
+resources: {}
