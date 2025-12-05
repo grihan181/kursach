@@ -1,19 +1,16 @@
-FROM node:20-alpine AS deps
+FROM python:3.11-slim
+
 WORKDIR /app
-COPY frontend/package*.json ./
-RUN npm install
 
-COPY frontend .
-RUN npm run build
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
-FROM node:20-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV=production
+COPY app ./app
 
-COPY --from=deps /app/.next ./.next
-COPY --from=deps /app/public ./public
-COPY --from=deps /app/package*.json ./
-RUN npm install --omit=dev
+ENV APP_SERVICE_NAME=order-service
+ENV APP_DATABASE_URL=postgresql://order:order@db:5432/orders
+ENV APP_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
 
-EXPOSE 3000
-CMD ["npm", "start"]
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,3 +1,13 @@
+__pycache__/
+*.pyc
+.env
+*.db
+.eggs
+*.egg-info
+.cache
+dist/
+build/
+.pytest_cache/
 node_modules
 .next
 out
