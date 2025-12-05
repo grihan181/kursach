@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "order-service.fullname" . }}
+  labels:
+    app: {{ include "order-service.name" . }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "order-service.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "order-service.name" . }}
+    spec:
+      containers:
+        - name: order-service
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: APP_DATABASE_URL
+              value: "{{ .Values.env.APP_DATABASE_URL }}"
+            - name: APP_KAFKA_BOOTSTRAP_SERVERS
+              value: "{{ .Values.env.APP_KAFKA_BOOTSTRAP_SERVERS }}"
+            - name: APP_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: jwtSecret
+            - name: APP_OTLP_ENDPOINT
+              value: "{{ .Values.env.APP_OTLP_ENDPOINT }}"
+          ports:
+            - containerPort: 8000
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+          resources: {{- toYaml .Values.resources | nindent 12 }}
