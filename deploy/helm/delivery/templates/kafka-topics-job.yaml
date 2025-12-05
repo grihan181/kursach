@@ -1,0 +1,32 @@
+{{- if and .Values.kafka.enabled .Values.kafka.topics }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kafka-create-topics
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: create-topics
+          image: bitnami/kafka:3.7.0-debian-12-r3
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+              bootstrap="{{ default (printf "%s-kafka:9092" .Release.Name) .Values.kafka.bootstrap }}"
+              for topic in {{ range $index, $topic := .Values.kafka.topics }}{{ if $index }} {{ end }}"{{ $topic.name }}:{{ $topic.partitions }}:{{ $topic.replicationFactor }}"{{ end }}; do
+                IFS=":" read -r name partitions rf <<< "$topic"
+                /opt/bitnami/kafka/bin/kafka-topics.sh --create \
+                  --if-not-exists \
+                  --bootstrap-server "$bootstrap" \
+                  --topic "$name" \
+                  --partitions "$partitions" \
+                  --replication-factor "$rf"
+              done
+      dnsPolicy: ClusterFirst
+{{- end }}

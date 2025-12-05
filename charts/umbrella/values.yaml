@@ -1,0 +1,49 @@
+kafka:
+  enabled: true
+  replicaCount: 1
+  logPersistence:
+    enabled: false
+  zookeeper:
+    enabled: true
+    persistence:
+      enabled: false
+  controller:
+    persistence:
+      enabled: false
+  extraConfig: ""
+  auth:
+    clientProtocol: plaintext
+    interBrokerProtocol: plaintext
+
+# Global Kafka configuration that can be shared with workloads
+# either by provisioning an internal broker (default) or by
+# pointing to an existing cluster.
+global:
+  kafka:
+    # Optional override for bootstrap servers when using the bundled broker
+    bootstrapServers: ""
+    external:
+      enabled: false
+      bootstrapServers: ""
+    auth:
+      enabled: false
+      username: ""
+      password: ""
+      securityProtocol: SASL_PLAINTEXT
+      saslMechanism: SCRAM-SHA-256
+
+config:
+  name: ""
+
+secret:
+  name: ""
+
+# Job for creating required topics after install/upgrade
+topicJob:
+  enabled: true
+  image:
+    repository: bitnami/kafka
+    tag: 3.6.1
+    pullPolicy: IfNotPresent
+  backoffLimit: 3
+  resources: {}
