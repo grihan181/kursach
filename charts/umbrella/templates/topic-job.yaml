@@ -1,0 +1,81 @@
+{{- if .Values.topicJob.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "umbrella.fullname" . }}-create-topics
+  labels:
+    app.kubernetes.io/name: {{ include "umbrella.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: {{ .Values.topicJob.backoffLimit }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "umbrella.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: create-topics
+          image: "{{ .Values.topicJob.image.repository }}:{{ .Values.topicJob.image.tag }}"
+          imagePullPolicy: {{ .Values.topicJob.image.pullPolicy }}
+          env:
+            - name: BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "umbrella.kafkaConfigName" . }}
+                  key: bootstrap.servers
+{{- if .Values.global.kafka.auth.enabled }}
+            - name: SASL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "umbrella.kafkaSecretName" . }}
+                  key: username
+            - name: SASL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "umbrella.kafkaSecretName" . }}
+                  key: password
+            - name: SECURITY_PROTOCOL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "umbrella.kafkaSecretName" . }}
+                  key: securityProtocol
+            - name: SASL_MECHANISM
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "umbrella.kafkaSecretName" . }}
+                  key: saslMechanism
+{{- end }}
+          resources:
+{{ toYaml .Values.topicJob.resources | indent 12 }}
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+
+              declare -a auth_args=()
+              if [[ -n "${SASL_USERNAME:-}" && -n "${SASL_PASSWORD:-}" ]]; then
+                cat <<EOF_CONFIG >/tmp/client.properties
+security.protocol=${SECURITY_PROTOCOL:-SASL_PLAINTEXT}
+sasl.mechanism=${SASL_MECHANISM:-SCRAM-SHA-256}
+sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="${SASL_USERNAME}" password="${SASL_PASSWORD}";
+EOF_CONFIG
+                auth_args+=(--command-config /tmp/client.properties)
+              fi
+
+              for topic in order.events chat.notifications notifications.outbound; do
+                kafka-topics.sh \
+                  --create \
+                  --if-not-exists \
+                  --bootstrap-server "${BOOTSTRAP_SERVERS}" \
+                  "${auth_args[@]}" \
+                  --topic "${topic}"
+              done
+{{- end }}

@@ -1,0 +1,8 @@
+This chart provisions Kafka either through the bundled Bitnami dependency or by
+referencing an external cluster. The bootstrap servers are exposed via the
+ConfigMap {{ include "umbrella.kafkaConfigName" . }}.
+
+A post-install/upgrade job creates the following topics:
+- order.events
+- chat.notifications
+- notifications.outbound

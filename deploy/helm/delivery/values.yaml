@@ -1,0 +1,113 @@
+# Global settings
+global:
+  ingressHost: delivery.local
+  imagePullSecrets: []
+
+kafka:
+  enabled: true
+  replicaCount: 1
+  zookeeper:
+    replicaCount: 1
+  bootstrap: ""
+  topics:
+    - name: order.events
+      partitions: 1
+      replicationFactor: 1
+    - name: chat.notifications
+      partitions: 1
+      replicationFactor: 1
+    - name: notifications.outbound
+      partitions: 1
+      replicationFactor: 1
+
+auth:
+  image: ghcr.io/nginxinc/nginx-unprivileged:stable
+  replicas: 1
+  database:
+    host: ""
+    port: 5432
+    name: auth
+    username: auth
+    password: authpassword
+  postgresql:
+    enabled: true
+    auth:
+      username: auth
+      password: authpassword
+      database: auth
+  service:
+    port: 8080
+  env: {}
+
+orders:
+  image: ghcr.io/nginxinc/nginx-unprivileged:stable
+  replicas: 1
+  database:
+    host: ""
+    port: 5432
+    name: orders
+    username: orders
+    password: orderspassword
+  postgresql:
+    enabled: true
+    auth:
+      username: orders
+      password: orderspassword
+      database: orders
+  kafkaBootstrap: ""
+  service:
+    port: 8080
+  env: {}
+
+chat:
+  image: ghcr.io/nginxinc/nginx-unprivileged:stable
+  replicas: 1
+  database:
+    host: ""
+    port: 5432
+    name: chat
+    username: chat
+    password: chatpassword
+  postgresql:
+    enabled: true
+    auth:
+      username: chat
+      password: chatpassword
+      database: chat
+  kafkaBootstrap: ""
+  service:
+    port: 8080
+  env: {}
+
+bff:
+  image: ghcr.io/nginxinc/nginx-unprivileged:stable
+  replicas: 1
+  service:
+    port: 8080
+  env:
+    AUTH_BASE_URL: http://auth:8080
+    ORDERS_BASE_URL: http://orders:8080
+    CHAT_BASE_URL: http://chat:8080
+
+frontend:
+  image: ghcr.io/nginxinc/nginx-unprivileged:stable
+  replicas: 1
+  service:
+    port: 8080
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations: {}
+  tls:
+    enabled: false
+    secretName: delivery-tls
+  paths:
+    - path: /api
+      pathType: Prefix
+      serviceName: bff
+      servicePort: 8080
+    - path: /
+      pathType: Prefix
+      serviceName: frontend
+      servicePort: 8080
