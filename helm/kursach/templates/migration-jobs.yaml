@@ -1,0 +1,116 @@
+{{- if and .Values.migrations.enabled .Values.migrations.jobs }}
+{{- $root := . -}}
+{{- range $index, $migration := .Values.migrations.jobs }}
+{{- $dbConfig := (get $root.Values.databases $migration.databaseRef) -}}
+{{- $dbSecretName := coalesce $migration.databaseSecret ($dbConfig.secretName) (include "kursach.dbSecretName" (dict "Root" $root "Name" $migration.databaseRef)) -}}
+{{- $databaseHost := default (printf "%s-postgresql" $migration.databaseRef) $migration.databaseHost -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "kursach.fullname" $root }}-{{ $migration.name }}-migrations
+  labels:
+    {{- include "kursach.labels" $root | nindent 4 }}
+    {{- with $root.Values.migrations.podLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    {{- with $root.Values.migrations.jobAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  backoffLimit: {{ default 3 (coalesce $migration.backoffLimit $root.Values.migrations.backoffLimit) }}
+  {{- with $root.Values.migrations.ttlSecondsAfterFinished }}
+  ttlSecondsAfterFinished: {{ . }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- include "kursach.selectorLabels" $root | nindent 8 }}
+        {{- with $root.Values.migrations.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with $root.Values.migrations.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ default "default" $root.Values.migrations.serviceAccountName }}
+      restartPolicy: OnFailure
+      {{- with $root.Values.migrations.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $root.Values.migrations.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $root.Values.migrations.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $root.Values.migrations.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: migrate
+          image: {{ $migration.image | quote }}
+          imagePullPolicy: {{ default "IfNotPresent" $migration.imagePullPolicy }}
+          {{- if $migration.command }}
+          command: {{- toYaml $migration.command | nindent 10 }}
+          {{- end }}
+          {{- if $migration.args }}
+          args: {{- toYaml $migration.args | nindent 10 }}
+          {{- end }}
+          env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $dbSecretName }}
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $dbSecretName }}
+                  key: password
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $dbSecretName }}
+                  key: database
+            - name: DB_HOST
+              value: {{ required "databaseHost is required for each migration" $databaseHost | quote }}
+            - name: DB_PORT
+              value: {{ default "5432" $migration.databasePort | quote }}
+            {{- with $migration.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with $migration.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- if $migration.resources }}
+          resources:
+            {{- toYaml $migration.resources | nindent 12 }}
+{{- end }}
+{{- if $migration.volumeMounts }}
+          volumeMounts:
+            {{- toYaml $migration.volumeMounts | nindent 12 }}
+{{- end }}
+{{- if $migration.securityContext }}
+          securityContext:
+            {{- toYaml $migration.securityContext | nindent 12 }}
+{{- end }}
+{{- with $root.Values.migrations.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
+{{- if $migration.volumes }}
+      volumes:
+        {{- toYaml $migration.volumes | nindent 8 }}
+{{- end }}
+---
+{{- end }}
+{{- end }}
