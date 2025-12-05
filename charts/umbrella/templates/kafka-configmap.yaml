@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "umbrella.kafkaConfigName" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "umbrella.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  bootstrap.servers: {{ include "umbrella.kafka.bootstrapServers" . | quote }}
