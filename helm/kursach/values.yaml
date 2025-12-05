@@ -1,0 +1,126 @@
+nameOverride: ""
+fullnameOverride: ""
+
+# Database credentials and storage settings per service
+# These are rendered into Secrets and fed into the Postgres subcharts via existingSecret.
+databases:
+  auth:
+    secretName: auth-db-credentials
+    username: auth_user
+    password: changeMeAuth
+    database: auth_db
+    superuserPassword: changeMeAuthRoot
+    replicationPassword: changeMeAuthReplica
+    storageClass: standard
+    size: 8Gi
+  orders:
+    secretName: orders-db-credentials
+    username: orders_user
+    password: changeMeOrders
+    database: orders_db
+    superuserPassword: changeMeOrdersRoot
+    replicationPassword: changeMeOrdersReplica
+    storageClass: standard
+    size: 8Gi
+  chat:
+    secretName: chat-db-credentials
+    username: chat_user
+    password: changeMeChat
+    database: chat_db
+    superuserPassword: changeMeChatRoot
+    replicationPassword: changeMeChatReplica
+    storageClass: fast
+    size: 16Gi
+
+# Individual Postgres releases driven by Bitnami chart values.
+authPostgresql:
+  enabled: true
+  fullnameOverride: auth-postgresql
+  primary:
+    persistence:
+      enabled: true
+      size: 8Gi
+      storageClass: standard
+  auth:
+    username: auth_user
+    database: auth_db
+    existingSecret: auth-db-credentials
+
+ordersPostgresql:
+  enabled: true
+  fullnameOverride: orders-postgresql
+  primary:
+    persistence:
+      enabled: true
+      size: 8Gi
+      storageClass: standard
+  auth:
+    username: orders_user
+    database: orders_db
+    existingSecret: orders-db-credentials
+
+chatPostgresql:
+  enabled: true
+  fullnameOverride: chat-postgresql
+  primary:
+    persistence:
+      enabled: true
+      size: 16Gi
+      storageClass: fast
+  auth:
+    username: chat_user
+    database: chat_db
+    existingSecret: chat-db-credentials
+
+# Optional Redis for cache/sessions.
+redis:
+  enabled: true
+  fullnameOverride: sessions-redis
+  architecture: standalone
+  auth:
+    enabled: true
+    password: changeMeRedis
+    existingSecret: redis-auth
+    existingSecretPasswordKey: redis-password
+
+# Post-install/upgrade migration hooks. Provide image/commands that
+# connect to the related database through the generated Secrets.
+migrations:
+  enabled: true
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 300
+  serviceAccountName: ""
+  imagePullSecrets: []
+  podLabels: {}
+  podAnnotations: {}
+  podSecurityContext: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  jobAnnotations: {}
+  jobs:
+    - name: auth
+      image: ghcr.io/example/auth-migrations:latest
+      databaseRef: auth
+      # Defaults to "<databaseRef>-postgresql" if omitted.
+      databaseHost: auth-postgresql
+      command: ["/bin/sh", "-c"]
+      args:
+        - >-
+          psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME" -f /migrations/init.sql
+    - name: orders
+      image: ghcr.io/example/orders-migrations:latest
+      databaseRef: orders
+      databaseHost: orders-postgresql
+      command: ["/bin/sh", "-c"]
+      args:
+        - >-
+          psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME" -f /migrations/init.sql
+    - name: chat
+      image: ghcr.io/example/chat-migrations:latest
+      databaseRef: chat
+      databaseHost: chat-postgresql
+      command: ["/bin/sh", "-c"]
+      args:
+        - >-
+          psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST/$DB_PORT/$DB_NAME" -f /migrations/init.sql
