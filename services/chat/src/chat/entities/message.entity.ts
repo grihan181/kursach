@@ -12,23 +12,23 @@ import { Conversation } from './conversation.entity';
 @Entity({ name: 'messages' })
 export class Message {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  sender: string;
+  sender!: string;
 
   @Column('text')
-  content: string;
+  content!: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @ManyToOne(() => Conversation, (conversation) => conversation.messages, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'conversation_id' })
-  conversation: Conversation;
+  conversation!: Conversation;
 
   @RelationId((message: Message) => message.conversation)
-  conversationId: string;
+  conversationId!: string;
 }

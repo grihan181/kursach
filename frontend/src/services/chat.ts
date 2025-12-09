@@ -1,35 +1,46 @@
+import { io, Socket } from 'socket.io-client';
 import type { Message } from '@/types';
-import { wsBaseUrl } from '@/config';
+import { apiFetch } from './api';
+import { chatSocketBaseUrl, tokenStorageKey } from '@/config';
 
-export function connectToChat(onMessage: (message: Message) => void): WebSocket {
-  const socket = new WebSocket(wsBaseUrl);
-
-  socket.addEventListener('message', (event) => {
-    try {
-      const data = JSON.parse(event.data) as Message;
-      onMessage(data);
-    } catch (error) {
-      console.error('Failed to parse message', error);
-    }
-  });
-
-  return socket;
+interface ChatSocketHandlers {
+  onMessage: (message: Message) => void;
+  onHistory?: (messages: Message[]) => void;
+  onStatus?: (status: 'connecting' | 'open' | 'closed') => void;
 }
 
-export function buildHistoryMock(): Message[] {
-  const now = Date.now();
-  return [
-    {
-      id: 'msg-1',
-      author: 'support@desk.io',
-      content: 'Добро пожаловать в чат! Задайте вопрос, мы рядом.',
-      createdAt: new Date(now - 1000 * 60 * 3).toISOString()
-    },
-    {
-      id: 'msg-2',
-      author: 'operator@desk.io',
-      content: 'Могу помочь с изменением статуса заказа?',
-      createdAt: new Date(now - 1000 * 60 * 2).toISOString()
-    }
-  ];
+export async function fetchMessages(orderId: string): Promise<Message[]> {
+  return apiFetch<Message[]>(`/chat/${orderId}/messages`);
+}
+
+export interface ConversationSummary {
+  orderId: string;
+  lastMessageAt: string | null;
+}
+
+export async function fetchConversations(): Promise<ConversationSummary[]> {
+  return apiFetch<ConversationSummary[]>('/chat');
+}
+
+export function connectToChat(orderId: string, handlers: ChatSocketHandlers): Socket {
+  const token =
+    typeof window !== 'undefined' ? localStorage.getItem(tokenStorageKey) ?? undefined : undefined;
+
+  const socket = io(`${chatSocketBaseUrl}/chat`, {
+    path: '/api/chat/socket.io',
+    transports: ['websocket'],
+    query: { orderId, token }
+  });
+
+  handlers.onStatus?.('connecting');
+
+  socket.on('connect', () => handlers.onStatus?.('open'));
+  socket.on('disconnect', () => handlers.onStatus?.('closed'));
+  socket.on('connect_error', () => handlers.onStatus?.('closed'));
+
+  socket.emit('join', { orderId });
+  socket.on('history', (messages: Message[]) => handlers.onHistory?.(messages));
+  socket.on('message', (message: Message) => handlers.onMessage(message));
+
+  return socket;
 }

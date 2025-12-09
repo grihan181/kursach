@@ -1,87 +1,78 @@
 import type { OrderDetail, OrderStatus, OrderSummary } from '@/types';
 import { apiFetch } from './api';
 
-const fallbackOrders: OrderDetail[] = [
-  {
-    id: 'ord-1001',
-    title: 'Доставка оборудования',
-    status: 'processing',
-    total: 3200,
-    description: 'Демо-заказ с оборудованием и аксесуарами',
-    createdAt: new Date().toISOString(),
+export type BackendOrder = {
+  id: string;
+  status: OrderStatus;
+  items: string;
+  route?: string | null;
+  price?: number;
+  currency?: string;
+  createdAt: string;
+};
+
+export function mapOrder(raw: BackendOrder): OrderDetail {
+  const parsedItems: Array<{ name: string; qty: number; price?: number }> = (() => {
+    try {
+      const arr = JSON.parse(raw.items);
+      if (Array.isArray(arr)) return arr;
+    } catch (e) {
+      /* ignore */
+    }
+    return [];
+  })();
+  const title = parsedItems[0]?.name || 'Заказ';
+  const total = raw.price ?? parsedItems.reduce((sum, item) => sum + (item.price || 0), 0);
+  return {
+    id: raw.id,
+    status: raw.status,
+    title,
+    total,
+    currency: raw.currency,
+    description: raw.route ?? '',
+    createdAt: raw.createdAt,
     permissions: { canChangeStatus: true },
-    history: ['new', 'processing']
-  },
-  {
-    id: 'ord-1002',
-    title: 'Печать материалов',
-    status: 'new',
-    total: 780,
-    description: 'Буклеты и каталоги',
-    createdAt: new Date().toISOString(),
-    permissions: { canChangeStatus: false },
-    history: ['new']
-  }
-];
+    history: [raw.status],
+    route: raw.route,
+    items: parsedItems
+  };
+}
 
 export async function fetchOrders(): Promise<OrderSummary[]> {
-  try {
-    return await apiFetch<OrderSummary[]>('/orders');
-  } catch (error) {
-    console.warn('Falling back to static orders', error);
-    return fallbackOrders;
-  }
+  const data = await apiFetch<BackendOrder[]>('/orders');
+  return data.map(mapOrder);
 }
 
 export async function fetchOrderDetail(id: string): Promise<OrderDetail> {
-  try {
-    return await apiFetch<OrderDetail>(`/orders/${id}`);
-  } catch (error) {
-    console.warn('Falling back to static order detail', error);
-    const order = fallbackOrders.find((item) => item.id === id) ?? fallbackOrders[0];
-    return order;
-  }
+  const data = await apiFetch<BackendOrder>(`/orders/${id}`);
+  return mapOrder(data);
 }
 
-export async function createOrder(input: Partial<OrderDetail>): Promise<OrderDetail> {
-  try {
-    return await apiFetch<OrderDetail>('/orders', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(input)
-    });
-  } catch (error) {
-    console.warn('Falling back to static create order', error);
-    const newOrder: OrderDetail = {
-      id: `ord-${Date.now()}`,
-      title: input.title || 'Новый заказ',
-      status: input.status ?? 'new',
-      total: input.total ?? 0,
-      description: input.description ?? '',
-      createdAt: new Date().toISOString(),
-      permissions: { canChangeStatus: true },
-      history: ['new']
-    };
-    fallbackOrders.unshift(newOrder);
-    return newOrder;
-  }
+export async function createOrder(input: {
+  title: string;
+  description?: string;
+  items?: Array<{ name: string; qty: number; price?: number }>;
+  route?: string;
+  pricing?: any;
+}): Promise<OrderDetail> {
+  const payload = {
+    route: input.route,
+    items: input.items ?? [{ name: input.title || 'item', qty: 1, price: 0 }],
+    pricing: input.pricing
+  };
+  const created = await apiFetch<BackendOrder>('/orders', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  return mapOrder(created);
 }
 
 export async function updateOrderStatus(id: string, status: OrderStatus): Promise<OrderDetail> {
-  try {
-    return await apiFetch<OrderDetail>(`/orders/${id}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
-    });
-  } catch (error) {
-    console.warn('Falling back to static status change', error);
-    const order = fallbackOrders.find((item) => item.id === id);
-    if (!order) {
-      throw new Error('Order not found');
-    }
-    order.status = status;
-    order.history.push(status);
-    return order;
-  }
+  const updated = await apiFetch<BackendOrder>(`/orders/${id}/status`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status })
+  });
+  return mapOrder(updated);
 }

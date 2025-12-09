@@ -12,16 +12,16 @@ import { Message } from './message.entity';
 @Unique(['orderId'])
 export class Conversation {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  orderId: string;
+  orderId!: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @OneToMany(() => Message, (message) => message.conversation, {
     cascade: true,
   })
-  messages: Message[];
+  messages!: Message[];
 }

@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+2import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { Role } from '../config.js';
 
@@ -14,11 +14,12 @@ export interface RequestWithUser extends Request {
 export function jwtGuard(jwtSecret: string, allowedRoles: Role[] = ['user', 'admin']) {
   return (req: RequestWithUser, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith('Bearer ')) {
+    const queryToken = typeof req.query?.token === 'string' ? req.query.token : undefined;
+    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice('Bearer '.length) : undefined;
+    const token = bearerToken ?? queryToken;
+    if (!token) {
       return res.status(401).json({ message: 'Missing bearer token' });
     }
-
-    const token = authHeader.slice('Bearer '.length);
 
     try {
       const payload = jwt.verify(token, jwtSecret) as jwt.JwtPayload;

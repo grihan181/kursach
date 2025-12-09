@@ -1,0 +1,172 @@
+services:
+  kafka:
+    image: obsidiandynamics/kafka:latest
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_ZOOKEEPER_CONNECT: localhost:2181
+      ZOOKEEPER_AUTOSTART: "true"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  auth-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: auth
+      POSTGRES_USER: auth
+      POSTGRES_PASSWORD: authpassword
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+
+  orders-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: orders
+      POSTGRES_USER: orders
+      POSTGRES_PASSWORD: orderspassword
+    volumes:
+      - orders-db-data:/var/lib/postgresql/data
+
+  chat-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: chat
+      POSTGRES_USER: chat
+      POSTGRES_PASSWORD: chatpassword
+    volumes:
+      - chat-db-data:/var/lib/postgresql/data
+
+  auth:
+    build: services/auth
+    depends_on:
+      - auth-db
+      - kafka
+    environment:
+      PORT: 8080
+      DB_HOST: auth-db
+      DB_PORT: 5432
+      DB_NAME: auth
+      DB_USER: auth
+      DB_PASSWORD: authpassword
+      JWT_SECRET: change-me
+      ACCESS_TTL_MIN: 60
+      REFRESH_TTL_MIN: 1440
+
+  orders:
+    build: services/orders
+    depends_on:
+      - orders-db
+      - kafka
+      - pricing
+    environment:
+      PORT: 8080
+      DB_HOST: orders-db
+      DB_PORT: 5432
+      DB_NAME: orders
+      DB_USER: orders
+      DB_PASSWORD: orderspassword
+      KAFKA_BROKERS: kafka:9092
+      ORDERS_TOPIC_CREATED: order.created
+      ORDERS_TOPIC_STATUS_CHANGED: order.status.changed
+      PRICING_URL: http://pricing:8080
+
+  chat:
+    build: services/chat
+    depends_on:
+      - chat-db
+      - kafka
+    environment:
+      PORT: 8080
+      DB_HOST: chat-db
+      DB_PORT: 5432
+      DB_NAME: chat
+      DB_USER: chat
+      DB_PASSWORD: chatpassword
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_CONSUMER_GROUP: chat-service-group
+      ADMIN_ALERT_ROOM: admin-feed
+      BOT_SENDER: bot
+
+  pricing:
+    build: services/pricing
+    depends_on:
+      - kafka
+    environment:
+      PORT: 8080
+      KAFKA_BROKERS: kafka:9092
+      QUOTE_TOPIC: quote.events
+      BASE_PRICE: 15
+      WEIGHT_RATE: 2.5
+      VOLUME_RATE: 0.01
+      CURRENCY: USD
+
+  notifications:
+    build: services/notifications
+    depends_on:
+      - kafka
+    environment:
+      PORT: 8080
+      KAFKA_BROKERS: kafka:9092
+      NOTIFICATIONS_CONSUME_TOPICS: chat.notifications
+      NOTIFICATIONS_OUTBOUND_TOPIC: notifications.outbound
+      KAFKA_CLIENT_ID: notifications-service
+      KAFKA_GROUP_ID: notifications-consumers
+
+  bff:
+    build: .
+    depends_on:
+      - auth
+      - orders
+      - chat
+      - pricing
+      - notifications
+    environment:
+      PORT: 3000
+      API_PREFIX: /api
+      AUTH_SERVICE_URL: http://auth:8080
+      ORDERS_SERVICE_URL: http://orders:8080
+      CHAT_SERVICE_URL: http://chat:8080
+      PRICING_SERVICE_URL: http://pricing:8080
+      NOTIFICATIONS_SERVICE_URL: http://notifications:8080
+      JWT_SECRET: change-me
+      HTTP_TIMEOUT_MS: 5000
+      HTTP_RETRY_COUNT: 2
+      CORS_ORIGINS: http://localhost,http://localhost:3000,http://localhost:80
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build:
+      context: frontend
+      args:
+        NEXT_PUBLIC_BFF_URL: http://localhost:3000/api
+        NEXT_PUBLIC_CHAT_SOCKET_URL: http://localhost:3000
+    environment:
+      NEXT_PUBLIC_BFF_URL: http://localhost:3000/api
+      NEXT_PUBLIC_CHAT_SOCKET_URL: http://localhost:3000
+    depends_on:
+      - bff
+    ports:
+      - "80:8080"
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BROKERCONNECT: kafka:9092
+    ports:
+      - "9000:9000"
+
+volumes:
+  auth-db-data:
+  orders-db-data:
+  chat-db-data:

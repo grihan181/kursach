@@ -1,0 +1,35 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:orders-postgres}:${DB_PORT:5432}/${DB_NAME:orders}
+    username: ${DB_USER:orders}
+    password: ${DB_PASSWORD:orderspassword}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BROKERS:kafka:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      group-id: orders-service
+      auto-offset-reset: latest
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+
+orders:
+  topics:
+    created: ${ORDERS_TOPIC_CREATED:order.created}
+    statusChanged: ${ORDERS_TOPIC_STATUS_CHANGED:order.status.changed}
+  pricingUrl: ${PRICING_URL:http://pricing:8080}

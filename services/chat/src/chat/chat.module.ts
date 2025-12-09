@@ -21,7 +21,7 @@ import { OrdersEventsConsumer } from './orders.consumer';
           options: {
             client: {
               clientId: 'chat-notifications',
-              brokers: process.env.KAFKA_BROKERS?.split(',').filter(Boolean),
+              brokers: process.env.KAFKA_BROKERS?.split(',').filter(Boolean) || [],
             },
             producerOnlyMode: true,
           },

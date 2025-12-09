@@ -1,9 +1,12 @@
 import OrderList from '@/components/OrderList';
+import Protected from '@/components/Protected';
 
 export default function OrdersPage() {
   return (
-    <div className="container">
-      <OrderList />
-    </div>
+    <Protected>
+      <div className="container">
+        <OrderList />
+      </div>
+    </Protected>
   );
 }

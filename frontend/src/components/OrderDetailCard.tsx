@@ -4,7 +4,14 @@ import { useEffect, useState } from 'react';
 import type { OrderDetail, OrderStatus } from '@/types';
 import { fetchOrderDetail, updateOrderStatus } from '@/services/orders';
 
-const statuses: OrderStatus[] = ['new', 'processing', 'shipped', 'done', 'canceled'];
+const statuses: OrderStatus[] = ['draft', 'paid', 'shipping', 'delivered', 'cancelled'];
+const statusLabels: Record<OrderStatus, string> = {
+  draft: 'Черновик',
+  paid: 'Оплачен',
+  shipping: 'В пути',
+  delivered: 'Доставлен',
+  cancelled: 'Отменён'
+};
 
 interface Props {
   id: string;
@@ -48,12 +55,16 @@ export default function OrderDetailCard({ id }: Props) {
     <div className="card grid" style={{ gap: 16 }}>
       <div className="flex" style={{ justifyContent: 'space-between' }}>
         <div>
-          <p className="badge">{order.status}</p>
+          <p className={`badge status-${order.status}`}>
+            {statusLabels[order.status] ?? order.status}
+          </p>
           <h2>{order.title}</h2>
           <p>{order.description}</p>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <strong>{order.total} ₽</strong>
+          <strong>
+            {order.total} {order.currency ?? '₽'}
+          </strong>
           <p style={{ color: '#475569' }}>Создан: {new Date(order.createdAt).toLocaleString()}</p>
         </div>
       </div>
@@ -69,7 +80,7 @@ export default function OrderDetailCard({ id }: Props) {
           >
             {statuses.map((status) => (
               <option value={status} key={status}>
-                {status}
+                {statusLabels[status] ?? status}
               </option>
             ))}
           </select>
@@ -81,8 +92,8 @@ export default function OrderDetailCard({ id }: Props) {
         <h3>История статусов</h3>
         <div className="flex">
           {order.history.map((entry, index) => (
-            <span className="badge" key={`${entry}-${index}`}>
-              {entry}
+            <span className={`badge status-${entry}`} key={`${entry}-${index}`}>
+              {statusLabels[entry] ?? entry}
             </span>
           ))}
         </div>

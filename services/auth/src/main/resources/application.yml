@@ -1,0 +1,24 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:auth-postgres}:${DB_PORT:5432}/${DB_NAME:auth}
+    username: ${DB_USER:auth}
+    password: ${DB_PASSWORD:authpassword}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc.lob.non_contextual_creation: true
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+
+auth:
+  jwt:
+    secret: ${JWT_SECRET:change-me}
+    accessTtlMinutes: ${ACCESS_TTL_MIN:60}
+    refreshTtlMinutes: ${REFRESH_TTL_MIN:1440}

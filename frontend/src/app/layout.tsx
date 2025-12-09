@@ -1,28 +1,21 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import './globals.css';
+import NavBar from '@/components/NavBar';
+import Providers from '@/components/Providers';
 
 export const metadata: Metadata = {
-  title: 'Order Desk',
-  description: 'Order management and chat console'
+  title: 'Delivery Desk',
+  description: 'Микросервисная доставка: заказы, чат, уведомления'
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
-        <nav>
-          <div className="nav-content">
-            <Link href="/">Order Desk</Link>
-            <div className="nav-links">
-              <Link href="/login">Login</Link>
-              <Link href="/register">Register</Link>
-              <Link href="/orders">Orders</Link>
-              <Link href="/chat">Chat</Link>
-            </div>
-          </div>
-        </nav>
-        <main>{children}</main>
+      <body className="app-shell">
+        <Providers>
+          <NavBar />
+          <main>{children}</main>
+        </Providers>
       </body>
     </html>
   );

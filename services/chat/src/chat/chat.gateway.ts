@@ -11,10 +11,10 @@ import { Server, Socket } from 'socket.io';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { ChatService } from './chat.service';
 
-@WebSocketGateway({ namespace: '/chat' })
+@WebSocketGateway({ namespace: '/chat', path: '/chat/socket.io' })
 export class ChatGateway implements OnGatewayInit, OnGatewayConnection {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   constructor(private readonly chatService: ChatService) {}
 
@@ -28,9 +28,15 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection {
     if (typeof orderId === 'string') {
       client.join(orderId);
     }
+    const historyRoom = typeof orderId === 'string' ? orderId : undefined;
+    if (historyRoom) {
+      this.chatService.getMessages(historyRoom).then((history) => {
+        client.emit('history', history);
+      });
+    }
   }
 
-  @SubscribeMessage('join')
+@SubscribeMessage('join')
   async handleJoin(
     @MessageBody('orderId') orderId: string,
     @ConnectedSocket() client: Socket,

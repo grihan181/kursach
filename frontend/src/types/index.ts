@@ -1,4 +1,4 @@
-export type OrderStatus = 'new' | 'processing' | 'shipped' | 'done' | 'canceled';
+export type OrderStatus = 'draft' | 'paid' | 'shipping' | 'delivered' | 'cancelled';
 
 export interface OrderPermission {
   canChangeStatus: boolean;
@@ -6,21 +6,25 @@ export interface OrderPermission {
 
 export interface OrderSummary {
   id: string;
-  title: string;
   status: OrderStatus;
+  title: string;
   total: number;
+  currency?: string;
+  route?: string | null;
+  createdAt?: string;
 }
 
 export interface OrderDetail extends OrderSummary {
-  description: string;
+  description?: string;
   createdAt: string;
   permissions: OrderPermission;
   history: OrderStatus[];
+  items?: Array<{ name: string; qty: number; price?: number }>;
 }
 
 export interface Message {
   id: string;
-  author: string;
+  sender: string;
   content: string;
   createdAt: string;
 }
@@ -32,9 +36,14 @@ export interface AuthPayload {
 }
 
 export interface AuthResponse {
-  token?: string;
-  user: {
-    id: string;
-    email: string;
+  accessToken?: string;
+  refreshToken?: string;
+  id?: string;
+  email?: string;
+  role?: string;
+  user?: {
+    id?: string;
+    email?: string;
+    role?: string;
   };
 }

@@ -1,0 +1,4 @@
+[mcpServers.ui-browser-agent]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-puppeteer"]
+

@@ -34,6 +34,24 @@ export class ChatService {
     return conversation.messages ?? [];
   }
 
+  async getConversationSummaries(): Promise<Array<{ orderId: string; lastMessageAt: string | null }>> {
+    const raw = await this.conversationsRepository
+      .createQueryBuilder('conversation')
+      .leftJoin('conversation.messages', 'message')
+      .select('conversation.orderId', 'orderId')
+      .addSelect('MAX(message.createdAt)', 'lastMessageAt')
+      .addSelect('conversation.createdAt', 'createdAt')
+      .groupBy('conversation.orderId')
+      .addGroupBy('conversation.createdAt')
+      .orderBy('MAX(message.createdAt)', 'DESC', 'NULLS LAST')
+      .addOrderBy('conversation.createdAt', 'DESC')
+      .getRawMany();
+    return raw.map((r: any) => ({
+      orderId: r.orderId as string,
+      lastMessageAt: r.lastMessageAt ? new Date(r.lastMessageAt).toISOString() : null,
+    }));
+  }
+
   async createMessage(dto: CreateMessageDto): Promise<Message> {
     const conversation =
       (await this.getConversation(dto.orderId)) ??
