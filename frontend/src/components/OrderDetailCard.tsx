@@ -237,7 +237,7 @@ export default function OrderDetailCard({ id }: Props) {
             {pendingStatus && <span className="badge">Сохраняем...</span>}
           </div>
         ) : (
-          <p style={{ margin: 0, color: 'var(--muted)' }}>Нет прав для изменения статуса.</p>
+          <p style={{ margin: 0, color: 'var(--muted)' }}></p>
         )}
         {statusError && (
           <div className="badge" style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#fecaca' }}>{statusError}</div>

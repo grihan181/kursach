@@ -1,144 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="acefc31e-d507-42b3-8bdb-1f80c589861a" name="Changes" comment="аа">
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/README_FULL.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/.gitkeep" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/app/admin/users/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/app/profile/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/app/warehouses/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/AdminGate.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/UserAdminPanel.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/constants/countries.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/constants/stages.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/constants/warehouseLocations.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/services/admin.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/services/profile.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/services/warehouses.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/bot/Dockerfile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/bot/app.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/bot/data/.gitkeep" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/bot/requirements.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/build.gradle" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/settings.gradle" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/OrdersApplication.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/model/Order.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/model/OrderStage.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/model/OrderStatusHistory.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/model/Warehouse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/repo/OrderRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/repo/OrderStageRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/repo/OrderStatusHistoryRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/repo/WarehouseRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/service/OrderEventsProducer.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/service/OrderReferenceFormatter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/service/OrderService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/service/PricingClient.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/service/WarehouseService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/service/dto/CreateOrderRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/service/dto/CreateStageRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/service/dto/DirectionInput.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/service/dto/OrderHistoryEntryDto.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/service/dto/OrderItem.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/service/dto/OrderPermissionsDto.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/service/dto/OrderStageDto.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/service/dto/OrderView.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/service/dto/PricingInput.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/service/dto/UpdateOrderRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/service/dto/WarehouseView.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/web/OrderController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/web/StatusUpdateRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/orders/src/main/java/com/example/orders/web/WarehouseController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/payments/Dockerfile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/payments/gradle/wrapper/gradle-wrapper.jar" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/payments/gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/payments/gradlew" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/payments/gradlew.bat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/payments/settings.gradle.kts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/payments/src/main/java/com/example/payments/PaymentGatewayException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/payments/src/main/java/com/example/payments/PaymentsApplication.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/payments/src/main/java/com/example/payments/client/OrderClient.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/payments/src/main/java/com/example/payments/client/OrderSummary.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/payments/src/main/java/com/example/payments/web/PaymentController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/payments/src/main/java/com/example/payments/web/PaymentForm.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/payments/src/main/resources/application.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/payments/src/main/resources/templates/checkout.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/payments/src/main/resources/templates/result.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sql/warehouses_seed.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.codex/mcp.toml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/chat/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/chat/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/globals.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/AuthForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/AuthForm.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/ChatPanel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/ChatPanel.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/NavBar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/NavBar.tsx" afterDir="false" />
+    <list default="true" id="acefc31e-d507-42b3-8bdb-1f80c589861a" name="Changes" comment="Delivery test">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/OrderDetailCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/OrderDetailCard.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/OrderForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/OrderForm.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/OrderList.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/OrderList.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/services/auth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/services/auth.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/services/dashboard.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/services/dashboard.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/services/orders.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/services/orders.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/types/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/types/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/tsconfig.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/auth/.gradle/8.10/checksums/checksums.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/auth/.gradle/8.10/checksums/md5-checksums.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/auth/.gradle/8.10/checksums/sha1-checksums.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/auth/.gradle/8.10/dependencies-accessors/gc.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/auth/.gradle/8.10/executionHistory/executionHistory.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/auth/.gradle/8.10/executionHistory/executionHistory.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/auth/.gradle/8.10/fileChanges/last-build.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/auth/.gradle/8.10/fileHashes/fileHashes.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/auth/.gradle/8.10/fileHashes/fileHashes.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/auth/.gradle/8.10/gc.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/auth/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/auth/.gradle/buildOutputCleanup/cache.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/auth/.gradle/buildOutputCleanup/outputFiles.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/auth/.gradle/file-system.probe" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/auth/.gradle/vcs-1/gc.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/auth/src/main/kotlin/com/example/auth/model/User.kt" beforeDir="false" afterPath="$PROJECT_DIR$/services/auth/src/main/kotlin/com/example/auth/model/User.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/auth/src/main/kotlin/com/example/auth/service/AuthService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/services/auth/src/main/kotlin/com/example/auth/service/AuthService.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/auth/src/main/kotlin/com/example/auth/service/JwtService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/services/auth/src/main/kotlin/com/example/auth/service/JwtService.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/auth/src/main/kotlin/com/example/auth/web/AuthController.kt" beforeDir="false" afterPath="$PROJECT_DIR$/services/auth/src/main/kotlin/com/example/auth/web/AuthController.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/auth/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/services/auth/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/chat/src/chat/orders.consumer.ts" beforeDir="false" afterPath="$PROJECT_DIR$/services/chat/src/chat/orders.consumer.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/notifications/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/services/notifications/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/notifications/src/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/services/notifications/src/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/.gradle/8.10/checksums/checksums.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/.gradle/8.10/checksums/md5-checksums.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/.gradle/8.10/checksums/sha1-checksums.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/.gradle/8.10/dependencies-accessors/gc.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/.gradle/8.10/executionHistory/executionHistory.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/.gradle/8.10/executionHistory/executionHistory.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/.gradle/8.10/fileChanges/last-build.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/.gradle/8.10/fileHashes/fileHashes.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/.gradle/8.10/fileHashes/fileHashes.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/.gradle/8.10/gc.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/.gradle/buildOutputCleanup/cache.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/.gradle/buildOutputCleanup/outputFiles.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/.gradle/file-system.probe" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/.gradle/vcs-1/gc.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/services/orders/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/services/payments/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/settings.gradle.kts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/src/main/kotlin/com/example/orders/OrdersApplication.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/src/main/kotlin/com/example/orders/model/Order.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/src/main/kotlin/com/example/orders/repo/OrderRepository.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/src/main/kotlin/com/example/orders/service/OrderEventsProducer.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/src/main/kotlin/com/example/orders/service/OrderService.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/src/main/kotlin/com/example/orders/service/PricingClient.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/orders/src/main/kotlin/com/example/orders/web/OrderController.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/middleware/jwtGuard.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/middleware/jwtGuard.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -218,7 +83,7 @@
       <workItem from="1766588033245" duration="16162000" />
       <workItem from="1766939490271" duration="6046000" />
       <workItem from="1767016953298" duration="19567000" />
-      <workItem from="1767044647706" duration="2846000" />
+      <workItem from="1767044647706" duration="3518000" />
     </task>
     <task id="LOCAL-00001" summary="аа">
       <option name="closed" value="true" />
@@ -228,7 +93,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766588137680</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Delivery test">
+      <option name="closed" value="true" />
+      <created>1767047814666</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1767047814666</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -236,6 +109,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="аа" />
-    <option name="LAST_COMMIT_MESSAGE" value="аа" />
+    <MESSAGE value="Delivery test" />
+    <option name="LAST_COMMIT_MESSAGE" value="Delivery test" />
   </component>
 </project>
