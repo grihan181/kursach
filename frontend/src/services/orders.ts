@@ -1,40 +1,94 @@
-import type { OrderDetail, OrderStatus, OrderSummary } from '@/types';
+import type {
+  OrderDetail,
+  OrderHistoryEntry,
+  OrderPermission,
+  OrderStage,
+  OrderStatus,
+  OrderSummary
+} from '@/types';
+import type { QuoteRequest } from './pricing';
 import { apiFetch } from './api';
 
 export type BackendOrder = {
   id: string;
-  status: OrderStatus;
+  reference?: string;
+  userId: string;
+  userEmail?: string | null;
+  status: OrderStatus | 'draft';
   items: string;
   route?: string | null;
-  price?: number;
-  currency?: string;
+  originCountry?: string | null;
+  destinationCountry?: string | null;
+  price?: number | null;
+  currency?: string | null;
   createdAt: string;
+  updatedAt?: string;
+  permissions?: Partial<OrderPermission>;
+  history?: Array<OrderHistoryEntry>;
+  stages?: Array<OrderStage>;
+  weightKg?: number | null;
+  lengthCm?: number | null;
+  widthCm?: number | null;
+  heightCm?: number | null;
 };
 
-export function mapOrder(raw: BackendOrder): OrderDetail {
-  const parsedItems: Array<{ name: string; qty: number; price?: number }> = (() => {
-    try {
-      const arr = JSON.parse(raw.items);
-      if (Array.isArray(arr)) return arr;
-    } catch (e) {
-      /* ignore */
+function parseItems(raw: string): Array<{ name: string; qty: number; price?: number }> {
+  try {
+    const data = JSON.parse(raw);
+    if (Array.isArray(data)) {
+      return data.filter(Boolean);
     }
-    return [];
-  })();
-  const title = parsedItems[0]?.name || 'Заказ';
-  const total = raw.price ?? parsedItems.reduce((sum, item) => sum + (item.price || 0), 0);
+  } catch {
+    // ignore
+  }
+  return [];
+}
+
+function mapHistory(entries?: Array<OrderHistoryEntry>): OrderHistoryEntry[] {
+  if (!entries) return [];
+  return [...entries].sort((a, b) => new Date(a.changedAt).getTime() - new Date(b.changedAt).getTime());
+}
+
+function mapStages(entries?: Array<OrderStage>): OrderStage[] {
+  if (!entries) return [];
+  return [...entries].sort((a, b) => new Date(a.happenedAt).getTime() - new Date(b.happenedAt).getTime());
+}
+
+function mapPermissions(raw?: Partial<OrderPermission>): OrderPermission {
+  return {
+    canChangeStatus: Boolean(raw?.canChangeStatus),
+    canEdit: Boolean(raw?.canEdit),
+    canDelete: Boolean(raw?.canDelete)
+  };
+}
+
+export function mapOrder(raw: BackendOrder): OrderDetail {
+  const parsedItems = parseItems(raw.items);
+  const title = parsedItems[0]?.name || 'Заявка';
+  const fallbackTotal = parsedItems.reduce((sum, item) => sum + (item.price ?? 0), 0);
+  const normalizedStatus: OrderStatus = (raw.status === 'draft' ? 'created' : raw.status) as OrderStatus;
   return {
     id: raw.id,
-    status: raw.status,
+    reference: raw.reference ?? raw.id,
+    userId: raw.userId,
+    userEmail: raw.userEmail ?? undefined,
+    status: normalizedStatus,
     title,
-    total,
-    currency: raw.currency,
-    description: raw.route ?? '',
-    createdAt: raw.createdAt,
-    permissions: { canChangeStatus: true },
-    history: [raw.status],
+    total: typeof raw.price === 'number' ? raw.price : fallbackTotal,
+    currency: raw.currency ?? undefined,
     route: raw.route,
-    items: parsedItems
+    createdAt: raw.createdAt,
+    description: raw.route ?? '',
+    permissions: mapPermissions(raw.permissions),
+    history: mapHistory(raw.history),
+    stages: mapStages(raw.stages),
+    items: parsedItems,
+    originCountry: raw.originCountry ?? undefined,
+    destinationCountry: raw.destinationCountry ?? undefined,
+    weightKg: raw.weightKg ?? undefined,
+    lengthCm: raw.lengthCm ?? undefined,
+    widthCm: raw.widthCm ?? undefined,
+    heightCm: raw.heightCm ?? undefined
   };
 }
 
@@ -48,16 +102,27 @@ export async function fetchOrderDetail(id: string): Promise<OrderDetail> {
   return mapOrder(data);
 }
 
-export async function createOrder(input: {
+interface CreateOrderInput {
   title: string;
-  description?: string;
   items?: Array<{ name: string; qty: number; price?: number }>;
+  direction: { origin: string; destination: string };
+  pricing: QuoteRequest;
   route?: string;
-  pricing?: any;
-}): Promise<OrderDetail> {
+}
+
+export async function createOrder(input: CreateOrderInput): Promise<OrderDetail> {
   const payload = {
     route: input.route,
-    items: input.items ?? [{ name: input.title || 'item', qty: 1, price: 0 }],
+    items:
+      input.items ??
+      [
+        {
+          name: input.title || 'Отправление',
+          qty: 1,
+          price: input.pricing ? undefined : 0
+        }
+      ],
+    direction: input.direction,
     pricing: input.pricing
   };
   const created = await apiFetch<BackendOrder>('/orders', {
@@ -73,6 +138,30 @@ export async function updateOrderStatus(id: string, status: OrderStatus): Promis
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status })
+  });
+  return mapOrder(updated);
+}
+
+export async function createOrderStage(
+  id: string,
+  payload: { title: string; location?: string; note?: string; happenedAt?: string; warehouseId?: string }
+): Promise<OrderStage> {
+  const stage = await apiFetch<OrderStage>(`/orders/${id}/stages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  return stage;
+}
+
+export async function updateOrder(
+  id: string,
+  payload: Partial<Pick<CreateOrderInput, 'items' | 'direction' | 'pricing'>>
+): Promise<OrderDetail> {
+  const updated = await apiFetch<BackendOrder>(`/orders/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
   });
   return mapOrder(updated);
 }

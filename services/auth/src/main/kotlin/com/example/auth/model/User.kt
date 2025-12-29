@@ -18,9 +18,21 @@ data class User(
     @Column(nullable = false, unique = true)
     val email: String,
 
-@Column(nullable = false)
-val passwordHash: String,
+    @Column(nullable = false)
+    val passwordHash: String,
 
-@Column(nullable = false)
-val role: String = "user",
+    @Column(nullable = false)
+    var role: String = "user",
+
+    @Column(nullable = true, length = 100)
+    var firstName: String? = null,
+
+    @Column(nullable = true, length = 100)
+    var lastName: String? = null,
+
+    @Column(nullable = true, length = 100)
+    var middleName: String? = null,
+
+    @Column(nullable = true, length = 32)
+    var phone: String? = null,
 )

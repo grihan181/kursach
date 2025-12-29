@@ -5,5 +5,9 @@ export const bffBaseUrl =
 
 export const chatSocketBaseUrl =
   process.env.NEXT_PUBLIC_CHAT_SOCKET_URL || browserOrigin || 'http://localhost:3000';
+
+const rawPaymentsBase =
+  process.env.NEXT_PUBLIC_PAYMENTS_URL || (browserOrigin ? browserOrigin : 'http://localhost:8085');
+export const paymentsBaseUrl = rawPaymentsBase.replace(/\/$/, '');
 export const tokenStorageKey = 'orderdesk_token';
 export const refreshTokenStorageKey = 'orderdesk_refresh';

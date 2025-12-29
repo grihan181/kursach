@@ -19,11 +19,12 @@ class JwtService(
 
     private val algorithm = Algorithm.HMAC256(secret)
 
-    fun issueTokens(userId: UUID, role: String): TokenPair {
+    fun issueTokens(userId: UUID, role: String, email: String): TokenPair {
         val now = Instant.now()
         val access = JWT.create()
             .withSubject(userId.toString())
             .withClaim("role", role)
+            .withClaim("email", email)
             .withIssuedAt(Date.from(now))
             .withExpiresAt(Date.from(now.plusSeconds(accessTtlMinutes * 60)))
             .sign(algorithm)
@@ -42,8 +43,9 @@ class JwtService(
         return try {
             val decoded = JWT.require(algorithm).build().verify(token)
             val role = decoded.getClaim("role").asString()
+            val email = decoded.getClaim("email").asString()
             val sub = decoded.subject ?: return null
-            AccessPrincipal(UUID.fromString(sub), role ?: "user")
+            AccessPrincipal(UUID.fromString(sub), role ?: "user", email)
         } catch (ex: Exception) {
             null
         }
@@ -52,4 +54,4 @@ class JwtService(
     fun refreshTtlSeconds(): Long = refreshTtlMinutes * 60
 }
 
-data class AccessPrincipal(val userId: UUID, val role: String)
+data class AccessPrincipal(val userId: UUID, val role: String, val email: String?)

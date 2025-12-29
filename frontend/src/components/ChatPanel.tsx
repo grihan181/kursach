@@ -3,11 +3,30 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { connectToChat, fetchMessages, fetchConversations } from '@/services/chat';
 import { fetchOrders } from '@/services/orders';
+import { fetchDashboard } from '@/services/dashboard';
 import { useAuth } from '@/hooks/useAuth';
-import type { Message, OrderSummary } from '@/types';
-import type { ConversationSummary } from '@/services/chat';
+import type { Message, OrderSummary, OrderStatus } from '@/types';
+import { fetchAdminUsers } from '@/services/admin';
 
-export default function ChatPanel() {
+const socketLabel = {
+  connecting: 'подключаемся',
+  open: 'в сети',
+  closed: 'отключено'
+};
+
+const statusBadge: Record<OrderStatus, string> = {
+  created: 'Создан',
+  paid: 'Оплачен',
+  shipping: 'В пути',
+  delivered: 'Доставлен',
+  cancelled: 'Отменён'
+};
+
+type ChatPanelProps = {
+  initialOrderId?: string | null;
+};
+
+export default function ChatPanel({ initialOrderId }: ChatPanelProps) {
   const { user } = useAuth();
   const [orders, setOrders] = useState<OrderSummary[]>([]);
   const [orderId, setOrderId] = useState<string | null>(null);
@@ -15,6 +34,7 @@ export default function ChatPanel() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [userEmails, setUserEmails] = useState<Record<string, string>>({});
   const socketRef = useRef<ReturnType<typeof connectToChat> | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const initialSelected = useRef(false);
@@ -22,42 +42,66 @@ export default function ChatPanel() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [orderList, convoList] = await Promise.all([fetchOrders(), fetchConversations()]);
-        const adminRoom =
-          user?.email === 'admin@admin'
-            ? [{ id: 'admin-feed', title: 'Системные сообщения', status: 'draft', total: 0 }]
-            : [];
-
-        const timeById: Record<string, string | null> = {};
-        convoList.forEach((c) => {
-          timeById[c.orderId] = c.lastMessageAt;
-        });
-
-        const combined = [...orderList, ...adminRoom].map((o) => ({
-          summary: o,
-          lastMessageAt: timeById[o.id] ?? null
-        }));
-
-        combined.sort((a, b) => {
-          const ta = a.lastMessageAt ? Date.parse(a.lastMessageAt) : -Infinity;
-          const tb = b.lastMessageAt ? Date.parse(b.lastMessageAt) : -Infinity;
-          if (ta === tb) return 0;
+        setError(null);
+        let orderList: OrderSummary[] = [];
+        try {
+          orderList = await fetchOrders();
+        } catch {
+          const dashboard = await fetchDashboard();
+          orderList = dashboard.orders;
+        }
+        const convoList = await fetchConversations();
+        const timeById = new Map(convoList.map((c) => [c.orderId, c.lastMessageAt]));
+        const ordered = [...orderList].sort((a, b) => {
+          const taRaw = timeById.get(a.id);
+          const tbRaw = timeById.get(b.id);
+          const ta = taRaw ? Date.parse(taRaw) : -Infinity;
+          const tb = tbRaw ? Date.parse(tbRaw) : -Infinity;
+          if (ta === tb) {
+            const ca = a.createdAt ? Date.parse(a.createdAt) : 0;
+            const cb = b.createdAt ? Date.parse(b.createdAt) : 0;
+            return cb - ca;
+          }
           return tb - ta;
         });
-
-        const sorted = combined.map((c) => c.summary as OrderSummary);
-        setOrders(sorted);
-        if (!initialSelected.current && sorted.length > 0) {
-          setOrderId(sorted[0].id);
+        setOrders(ordered);
+        if (!initialSelected.current && ordered.length > 0) {
+          const preferred =
+            initialOrderId && ordered.some((o) => o.id === initialOrderId) ? initialOrderId : ordered[0].id;
+          setOrderId(preferred);
           initialSelected.current = true;
         }
       } catch {
         setError('Не удалось загрузить список чатов');
+        setOrders([]);
       }
     };
 
     load();
-  }, [user?.email]);
+  }, [user?.email, initialOrderId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const seed: Record<string, string> = user?.id && user?.email ? { [user.id]: user.email } : {};
+    setUserEmails(seed);
+    if (user?.role === 'admin') {
+      fetchAdminUsers()
+        .then((users) => {
+          if (cancelled) return;
+          const map = users.reduce<Record<string, string>>((acc, item) => {
+            acc[item.id] = item.email;
+            return acc;
+          }, { ...seed });
+          setUserEmails(map);
+        })
+        .catch(() => {
+          /* ignore */
+        });
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.role, user?.id, user?.email]);
 
   useEffect(() => {
     if (!orderId) return;
@@ -81,9 +125,7 @@ export default function ChatPanel() {
 
     const socket = connectToChat(orderId, {
       onStatus: setSocketStatus,
-      onHistory: (history) => {
-        setMessages(history);
-      },
+      onHistory: (history) => setMessages(history),
       onMessage: (message) =>
         setMessages((prev) => {
           if (prev.find((m) => m.id === message.id)) return prev;
@@ -107,47 +149,69 @@ export default function ChatPanel() {
     event.preventDefault();
     if (!input.trim() || !orderId) return;
 
-    const sender = user?.email ?? user?.id ?? 'user';
+    const sender = user?.email ?? user?.id ?? 'пользователь';
+    const payload = { orderId, sender, content: input };
     setInput('');
 
     if (socketRef.current?.connected) {
-      socketRef.current.emit('sendMessage', { orderId, sender, content: input });
+      socketRef.current.emit('sendMessage', payload);
     }
   };
 
+  useEffect(() => {
+    if (initialOrderId && orders.some((o) => o.id === initialOrderId)) {
+      setOrderId(initialOrderId);
+    }
+  }, [initialOrderId, orders]);
+
+  const resolveEmail = (userId?: string | null) => {
+    if (!userId) return undefined;
+    if (userEmails[userId]) {
+      return userEmails[userId];
+    }
+    if (user?.id === userId) {
+      return user?.email ?? userId;
+    }
+    return undefined;
+  };
+
+  const selectedOrder = orderId ? orders.find((o) => o.id === orderId) : null;
+
   return (
-    <div className="grid chat-grid">
-      <aside className="card chat-sidebar">
-        <h3>Чаты заказов</h3>
-        {orders.length === 0 && <p className="muted">Нет заказов</p>}
+    <div className="chat-shell">
+      <aside className="chat-sidebar">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ margin: 0 }}>Все комнаты</h3>
+          <span className="badge" style={{ fontSize: 11 }}>{orders.length} шт.</span>
+        </div>
+        {orders.length === 0 && <p style={{ color: 'var(--muted)' }}>Нет активных заказов</p>}
         <div className="chat-list">
           {orders.map((o) => (
-            <button
-              key={o.id}
-              className={`chat-list-item ${orderId === o.id ? 'active' : ''}`}
-              onClick={() => setOrderId(o.id)}
-            >
-              <div className="chat-list-title">{o.title || o.id}</div>
-              <div className="chat-list-sub">{o.status}</div>
+            <button key={o.id} className={`chat-list-item ${orderId === o.id ? 'active' : ''}`} onClick={() => setOrderId(o.id)}>
+              <div className="chat-list-title">
+                {(o.reference ?? o.id)} · {o.title || 'Без названия'}
+              </div>
+              <div className="chat-list-sub">
+                {(o.userEmail ?? resolveEmail(o.userId) ?? 'почта не указана') + ' · ' + (statusBadge[o.status] ?? statusBadge.created)}
+              </div>
             </button>
           ))}
         </div>
       </aside>
-      <div className="card chat-panel">
+
+      <div className="chat-panel">
         <div className="flex" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h2>Чат</h2>
-            <small className="muted">Комната: {orderId ?? 'не выбрана'}</small>
+            <p className="badge">Комната: {selectedOrder?.reference ?? 'не выбрана'}</p>
+            <h2 style={{ margin: '4px 0' }}>Чат с клиентом</h2>
           </div>
-          <span className="badge">WebSocket: {socketStatus}</span>
+          <span className="badge">Состояние: {socketLabel[socketStatus]}</span>
         </div>
         {error && (
-          <div className="badge" style={{ background: '#fee2e2', color: '#991b1b', marginBottom: '0.5rem' }}>
-            {error}
-          </div>
+          <div className="badge" style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#fecaca' }}>{error}</div>
         )}
         <div className="chat-messages">
-        {messages.map((msg) => (
+          {messages.map((msg) => (
             <article
               key={msg.id}
               className={`message ${user && (msg.sender === user.email || msg.sender === user.id) ? 'me' : 'other'}`}
@@ -156,15 +220,10 @@ export default function ChatPanel() {
                 <div className="message-sender">{msg.sender || 'пользователь'}</div>
               )}
               <p>{msg.content}</p>
-              <small>
-                {new Date(msg.createdAt).toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </small>
+              <small>{new Date(msg.createdAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</small>
             </article>
           ))}
-          {messages.length === 0 && <p className="muted">Нет сообщений</p>}
+          {messages.length === 0 && <p style={{ color: 'var(--muted)' }}>Сообщений ещё нет</p>}
           <div ref={bottomRef} />
         </div>
         <form className="flex" onSubmit={send}>

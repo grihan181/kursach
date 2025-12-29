@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Оплата заказа</title>
+    <style>
+        body { font-family: Inter, Arial, sans-serif; background: #f4f6fb; margin: 0; padding: 40px; }
+        .wrapper { max-width: 560px; margin: 0 auto; background: #fff; padding: 32px; border-radius: 16px; box-shadow: 0 20px 40px rgba(15,23,42,0.1); }
+        h1 { margin-top: 0; font-size: 24px; }
+        .order-info { margin-bottom: 24px; color: #475569; }
+        .order-info span { display: block; margin-top: 4px; font-weight: 600; color: #0f172a; }
+        label { display: block; margin-top: 16px; font-weight: 600; color: #0f172a; }
+        input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5f5; font-size: 16px; box-sizing: border-box; }
+        .row { display: flex; gap: 16px; }
+        .row > div { flex: 1; }
+        button { margin-top: 24px; width: 100%; padding: 14px; border: none; border-radius: 12px; background: linear-gradient(120deg, #2563eb, #7c3aed); color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; }
+        button:hover { opacity: 0.95; }
+        .hint { margin-top: 12px; font-size: 13px; color: #64748b; }
+        .error { color: #dc2626; font-size: 13px; margin-top: 4px; }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <h1 th:text="'Оплата заявки «' + ${order.title} + '»'">Оплата заявки</h1>
+    <div class="order-info">
+        <span th:text="'Номер заказа: ' + ${orderNumber}">ID</span>
+        <span th:text="'Маршрут: ' + (${order.route} ?: 'не указан')">Маршрут</span>
+        <span th:text="'Сумма: ' + ${order.amount} + ' ' + ${order.currency}">Сумма</span>
+        <span th:text="'Статус сейчас: ' + (${order.status} ?: 'created')">Статус</span>
+    </div>
+    <form th:action="@{|/payments/${order.id}|}" method="post" th:object="${form}">
+        <label for="cardNumber">Номер карты</label>
+        <input id="cardNumber" type="text" placeholder="0000000000000000" th:field="*{cardNumber}" maxlength="16" />
+        <div class="error" th:if="${#fields.hasErrors('cardNumber')}" th:errors="*{cardNumber}">Ошибка</div>
+
+        <div class="row">
+            <div>
+                <label for="expiry">Срок (MM/YY)</label>
+                <input id="expiry" type="text" placeholder="09/28" th:field="*{expiry}" maxlength="5" />
+                <div class="error" th:if="${#fields.hasErrors('expiry')}" th:errors="*{expiry}">Ошибка</div>
+            </div>
+            <div>
+                <label for="cvv">CVC</label>
+                <input id="cvv" type="password" placeholder="123" th:field="*{cvv}" maxlength="3" />
+                <div class="error" th:if="${#fields.hasErrors('cvv')}" th:errors="*{cvv}">Ошибка</div>
+            </div>
+        </div>
+
+        <label for="cardholder">Имя на карте</label>
+        <input id="cardholder" type="text" placeholder="IVAN IVANOV" th:field="*{cardholder}" />
+        <div class="error" th:if="${#fields.hasErrors('cardholder')}" th:errors="*{cardholder}">Ошибка</div>
+
+        <button type="submit">Подтвердить оплату</button>
+        <p class="hint">Это учебная заглушка: данные карты никуда не отправляются, после подтверждения заказ переводится в статус «оплачен».</p>
+    </form>
+</div>
+</body>
+</html>

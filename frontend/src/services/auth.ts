@@ -1,14 +1,14 @@
 import { refreshTokenStorageKey, tokenStorageKey } from '@/config';
-import type { AuthPayload, AuthResponse } from '@/types';
+import type { AuthPayload, AuthResponse, UserProfile } from '@/types';
 import { apiFetch } from './api';
 
-export async function me(token: string) {
-  const data = await apiFetch<AuthResponse>('/auth/me', {
+export async function me(token: string): Promise<UserProfile> {
+  const data = await apiFetch<UserProfile>('/auth/me', {
     headers: {
       Authorization: `Bearer ${token}`
     }
   });
-  return data.user ?? { id: data.id, email: data.email, role: data.role };
+  return data;
 }
 
 function persistTokens(accessToken?: string | null, refreshToken?: string | null) {
@@ -24,7 +24,7 @@ export async function login(payload: AuthPayload): Promise<AuthResponse> {
     body: JSON.stringify(payload)
   });
 
-  const user = data.user ?? { id: data.id, email: data.email, role: data.role };
+  const user = pickUser(data);
   const shaped: AuthResponse = { ...data, user };
   if (payload.tokenType === 'bearer') {
     persistTokens(data.accessToken, data.refreshToken);
@@ -50,7 +50,7 @@ export async function refreshSession(refreshToken: string): Promise<AuthResponse
     body: JSON.stringify({ refreshToken })
   });
   persistTokens(data.accessToken, data.refreshToken);
-  const user = data.user ?? { id: data.id, email: data.email, role: data.role };
+  const user = pickUser(data);
   return { ...data, user };
 }
 
@@ -59,4 +59,17 @@ export function logout() {
     localStorage.removeItem(tokenStorageKey);
     localStorage.removeItem(refreshTokenStorageKey);
   }
+}
+
+function pickUser(data: AuthResponse): UserProfile | null {
+  if (data.profile) return data.profile;
+  if (data.user) return data.user;
+  if (data.id && data.email && data.role) {
+    return {
+      id: data.id,
+      email: data.email,
+      role: data.role
+    };
+  }
+  return null;
 }

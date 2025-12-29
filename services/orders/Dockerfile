@@ -1,6 +1,6 @@
 FROM gradle:8.10.2-jdk17 AS builder
 WORKDIR /home/gradle/project
-COPY build.gradle.kts settings.gradle.kts ./
+COPY build.gradle settings.gradle ./
 COPY src ./src
 RUN gradle clean bootJar --no-daemon
 
@@ -10,3 +10,4 @@ COPY --from=builder /home/gradle/project/build/libs/orders-0.0.1-SNAPSHOT.jar ap
 ENV PORT=8080
 EXPOSE 8080
 ENTRYPOINT ["java","-jar","/app/app.jar"]
+

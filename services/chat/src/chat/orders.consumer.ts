@@ -4,6 +4,7 @@ import { ChatService } from './chat.service';
 
 type OrderEventPayload = {
   id?: string;
+  reference?: string;
   userId?: string;
   status?: string;
   route?: string | null;
@@ -12,6 +13,19 @@ type OrderEventPayload = {
   createdAt?: string;
   changedAt?: string;
   type?: 'orderCreated' | 'statusChanged';
+};
+
+const statusLabels: Record<string, string> = {
+  created: 'Создан',
+  paid: 'Оплачен',
+  shipping: 'В пути',
+  delivered: 'Доставлен',
+  cancelled: 'Отменён',
+};
+
+const localizeStatus = (value?: string) => {
+  if (!value) return 'неизвестно';
+  return statusLabels[value] ?? value;
 };
 
 @Controller()
@@ -57,11 +71,11 @@ export class OrdersEventsConsumer {
       await this.chatService.createMessage({
         orderId: this.adminRoom,
         sender: this.botSender,
-        content: `[${payload.id}] ${text}`,
+        content: `[${payload.reference ?? payload.id}] ${text}`,
       });
 
       this.logger.log(
-        `Bot message created for order ${payload.id} type=${payload.type} admin=${this.adminRoom}`,
+        `Bot message created for order ${payload.reference ?? payload.id} type=${payload.type} admin=${this.adminRoom}`,
       );
     } catch (err) {
       this.logger.error('Failed to create bot messages', err);
@@ -86,18 +100,18 @@ export class OrdersEventsConsumer {
 
   private formatCreated(payload: OrderEventPayload) {
     const route = payload.route ?? 'маршрут не указан';
+    const reference = payload.reference ?? payload.id ?? 'заказ';
     const pricePart =
       payload.price != null
         ? ` Сумма: ${payload.price}${payload.currency ? ' ' + payload.currency : ''}.`
         : '';
-    return `Новый заказ создан пользователем ${payload.userId ?? 'неизвестно'}. Статус: ${
-      payload.status ?? 'draft'
-    }. Маршрут: ${route}.${pricePart}`;
+    const status = localizeStatus(payload.status);
+    return `Создан новый заказ ${reference}. Статус: ${status}. Маршрут: ${route}.${pricePart}`;
   }
 
   private formatStatusChanged(payload: OrderEventPayload) {
-    return `Статус заказа обновлён на "${payload.status ?? 'unknown'}" пользователем ${
-      payload.userId ?? 'неизвестно'
-    }.`;
+    const reference = payload.reference ?? payload.id ?? 'заказ';
+    const status = localizeStatus(payload.status);
+    return `Статус ${reference} обновлён на "${status}".`;
   }
 }

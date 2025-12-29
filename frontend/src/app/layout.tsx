@@ -4,13 +4,13 @@ import NavBar from '@/components/NavBar';
 import Providers from '@/components/Providers';
 
 export const metadata: Metadata = {
-  title: 'Delivery Desk',
-  description: 'Микросервисная доставка: заказы, чат, уведомления'
+  title: 'Панель международной доставки',
+  description: 'Единая витрина для авторизации, заказов, статусов и уведомлений по доставке'
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="ru">
       <body className="app-shell">
         <Providers>
           <NavBar />

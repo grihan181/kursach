@@ -47,7 +47,9 @@ app.get(
       const ordersPromise = httpClient.get(`${config.ordersServiceUrl}/orders`, {
         headers: {
           ...(authHeader ? { Authorization: authHeader } : {}),
-          ...(req.user?.id ? { 'X-User-Id': req.user.id } : {})
+          ...(req.user?.id ? { 'X-User-Id': req.user.id } : {}),
+          ...(req.user?.role ? { 'X-User-Role': req.user.role } : {}),
+          ...(req.user?.email ? { 'X-User-Email': req.user.email } : {})
         }
       });
 
@@ -72,8 +74,13 @@ app.use(config.apiPrefix, (req: RequestWithUser, _res, next) => {
       const payload = jwt.verify(bearer, config.jwtSecret) as jwt.JwtPayload;
       const userId = (payload.sub as string) ?? (payload.userId as string);
       if (userId) {
+        const role = (payload.role as any) ?? 'user';
         req.headers['x-user-id'] = userId;
-        req.user = { id: userId, role: (payload.role as any) ?? 'user' };
+        req.headers['x-user-role'] = role;
+        if (payload.email) {
+          req.headers['x-user-email'] = String(payload.email);
+        }
+        req.user = { id: userId, role, email: (payload.email as string) ?? undefined };
       }
     } catch {
       // ignore decode errors; jwtGuard on protected routes will handle auth
@@ -94,6 +101,10 @@ const proxyCommonOptions = {
         try {
           const payload = jwt.verify(bearer, config.jwtSecret) as jwt.JwtPayload;
           userId = (payload.sub as string) ?? (payload.userId as string);
+          const role = (payload.role as any) ?? 'user';
+          if (userId) {
+            req.user = { id: userId, role };
+          }
         } catch {
           // ignore decoding errors here; jwtGuard handles auth
         }
@@ -102,12 +113,29 @@ const proxyCommonOptions = {
     if (userId) {
       proxyReq.setHeader('X-User-Id', userId);
     }
+    const role = req.user?.role;
+    if (role) {
+      proxyReq.setHeader('X-User-Role', role);
+    }
+    if (req.user?.email) {
+      proxyReq.setHeader('X-User-Email', req.user.email);
+    }
   },
   proxyTimeout: config.httpTimeoutMs
 };
 
 const prefixPath = (base: string) => (_path: string, req: express.Request) =>
   req.url === '/' ? base : `${base}${req.url}`;
+
+app.use(
+  `${config.apiPrefix}/auth/admin`,
+  jwtGuard(config.jwtSecret, ['admin']),
+  createProxyMiddleware({
+    target: config.authServiceUrl,
+    pathRewrite: prefixPath('/auth/admin'),
+    ...proxyCommonOptions
+  })
+);
 
 app.use(
   `${config.apiPrefix}/auth`,
@@ -169,6 +197,16 @@ app.use(
   })
 );
 
+app.use(
+  `${config.apiPrefix}/warehouses`,
+  jwtGuard(config.jwtSecret, ['user', 'admin']),
+  createProxyMiddleware({
+    target: config.ordersServiceUrl,
+    pathRewrite: prefixPath('/warehouses'),
+    ...proxyCommonOptions
+  })
+);
+
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);
   res.status(500).json({ message: 'Internal server error' });
@@ -177,3 +215,4 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 app.listen(config.port, () => {
   console.log(`BFF server listening on port ${config.port}`);
 });
+

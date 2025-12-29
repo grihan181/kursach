@@ -1,11 +1,11 @@
 import ChatPanel from '@/components/ChatPanel';
 import Protected from '@/components/Protected';
 
-export default function ChatPage() {
+export default function ChatPage({ searchParams }: { searchParams: { orderId?: string } }) {
   return (
     <Protected>
       <div className="container">
-        <ChatPanel />
+        <ChatPanel initialOrderId={searchParams?.orderId} />
       </div>
     </Protected>
   );

@@ -22,3 +22,4 @@ auth:
     secret: ${JWT_SECRET:change-me}
     accessTtlMinutes: ${ACCESS_TTL_MIN:60}
     refreshTtlMinutes: ${REFRESH_TTL_MIN:1440}
+  internalToken: ${AUTH_INTERNAL_TOKEN:}

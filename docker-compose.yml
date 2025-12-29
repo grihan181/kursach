@@ -25,6 +25,8 @@ services:
       POSTGRES_PASSWORD: authpassword
     volumes:
       - auth-db-data:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
 
   orders-db:
     image: postgres:15-alpine
@@ -34,6 +36,8 @@ services:
       POSTGRES_PASSWORD: orderspassword
     volumes:
       - orders-db-data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
 
   chat-db:
     image: postgres:15-alpine
@@ -43,6 +47,8 @@ services:
       POSTGRES_PASSWORD: chatpassword
     volumes:
       - chat-db-data:/var/lib/postgresql/data
+    ports:
+      - "5436:5432"
 
   auth:
     build: services/auth
@@ -59,6 +65,7 @@ services:
       JWT_SECRET: change-me
       ACCESS_TTL_MIN: 60
       REFRESH_TTL_MIN: 1440
+      AUTH_INTERNAL_TOKEN: ${AUTH_INTERNAL_TOKEN:-}
 
   orders:
     build: services/orders
@@ -74,6 +81,7 @@ services:
       DB_USER: orders
       DB_PASSWORD: orderspassword
       KAFKA_BROKERS: kafka:9092
+      NOTIFICATIONS_CONSUME_TOPICS: chat.notifications,order.status.changed
       ORDERS_TOPIC_CREATED: order.created
       ORDERS_TOPIC_STATUS_CHANGED: order.status.changed
       PRICING_URL: http://pricing:8080
@@ -91,6 +99,7 @@ services:
       DB_USER: chat
       DB_PASSWORD: chatpassword
       KAFKA_BROKERS: kafka:9092
+      NOTIFICATIONS_CONSUME_TOPICS: chat.notifications,order.status.changed
       KAFKA_CONSUMER_GROUP: chat-service-group
       ADMIN_ALERT_ROOM: admin-feed
       BOT_SENDER: bot
@@ -98,10 +107,12 @@ services:
   pricing:
     build: services/pricing
     depends_on:
-      - kafka
+    - kafka
+    - auth
     environment:
       PORT: 8080
       KAFKA_BROKERS: kafka:9092
+      NOTIFICATIONS_CONSUME_TOPICS: chat.notifications,order.status.changed
       QUOTE_TOPIC: quote.events
       BASE_PRICE: 15
       WEIGHT_RATE: 2.5
@@ -112,13 +123,23 @@ services:
     build: services/notifications
     depends_on:
       - kafka
+      - auth
     environment:
       PORT: 8080
       KAFKA_BROKERS: kafka:9092
-      NOTIFICATIONS_CONSUME_TOPICS: chat.notifications
+      NOTIFICATIONS_CONSUME_TOPICS: ${NOTIFICATIONS_CONSUME_TOPICS:-chat.notifications,order.status.changed}
       NOTIFICATIONS_OUTBOUND_TOPIC: notifications.outbound
       KAFKA_CLIENT_ID: notifications-service
       KAFKA_GROUP_ID: notifications-consumers
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: dekerilljr@gmail.com
+      SMTP_PASS: ytvs zgcw ncun pvab
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      NOTIFICATIONS_EMAIL_FROM: dekerilljr@gmail.com
+      NOTIFICATIONS_EMAIL_TO: ${NOTIFICATIONS_EMAIL_TO:-}
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-http://auth:8080}
+      AUTH_INTERNAL_TOKEN: ${AUTH_INTERNAL_TOKEN:-}
 
   bff:
     build: .
@@ -143,15 +164,29 @@ services:
     ports:
       - "3000:3000"
 
+  payments:
+    build: services/payments
+    depends_on:
+      - orders
+    environment:
+      PORT: 8080
+      ORDERS_SERVICE_URL: http://orders:8080
+      ORDERS_SERVICE_USER: payments-service
+      FRONTEND_URL: http://localhost
+    ports:
+      - "8085:8080"
+
   frontend:
     build:
       context: frontend
       args:
         NEXT_PUBLIC_BFF_URL: http://localhost:3000/api
         NEXT_PUBLIC_CHAT_SOCKET_URL: http://localhost:3000
+        NEXT_PUBLIC_PAYMENTS_URL: http://localhost:8085
     environment:
       NEXT_PUBLIC_BFF_URL: http://localhost:3000/api
       NEXT_PUBLIC_CHAT_SOCKET_URL: http://localhost:3000
+      NEXT_PUBLIC_PAYMENTS_URL: http://localhost:8085
     depends_on:
       - bff
     ports:
@@ -166,7 +201,29 @@ services:
     ports:
       - "9000:9000"
 
+  bot:
+    build: services/bot
+    depends_on:
+      - kafka
+      - auth
+      - bff
+    environment:
+      TELEGRAM_BOT_TOKEN: 8424025662:AAFO97MPlLeWltjJKLIW1VGSODKr_VwuwoI
+      AUTH_SERVICE_URL: http://auth:8080
+      BFF_BASE_URL: http://bff:3000/api
+      KAFKA_BROKERS: kafka:9092
+      BOT_KAFKA_TOPICS: ${BOT_KAFKA_TOPICS:-order.status.changed,order.stage.changed}
+      SESSION_FILE: ${BOT_SESSION_FILE:-/data/sessions.json}
+    volumes:
+      - bot-data:/data
+
 volumes:
   auth-db-data:
   orders-db-data:
   chat-db-data:
+  bot-data:
+
+
+
+
+
